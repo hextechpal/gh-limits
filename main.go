@@ -1,12 +1,14 @@
 package main
 
 import (
+	"context"
 	"flag"
-	"fmt"
 	"github.com/harness/gh-limits/experiments"
+	"log/slog"
 )
 
-const pat = "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"
+const pat = ""
+const pat1 = ""
 
 func main() {
 	// Define a string flag named "message" with a default value of "Hello".
@@ -16,14 +18,20 @@ func main() {
 
 	// Check the value of the "message" flag and print accordingly.
 	if *exp == "exp1" {
+		ctx := context.Background()
 		repo := experiments.Repo{
 			Owner:        "hextechpal",
 			Name:         "gh-limits",
 			SourceBranch: "develop",
-			SourceCommit: "",
+			SourceCommit: "ec08b69d57beedfa05a39b460b7fe85f1cd27362",
 		}
-		experiments.NewSerial(*token, repo, 1)
+		stats, err := experiments.NewSerial(*token, repo, 50).Run(ctx)
+		if err != nil {
+			slog.Error("Error while running experiment", "err", err)
+			return
+		}
+		slog.Info("experiment successful", "stats", stats)
 	} else {
-		fmt.Println("Invalid message. Please specify 'Hello' or 'World'.")
+		slog.Info("Invalid message. Please specify experiment name")
 	}
 }

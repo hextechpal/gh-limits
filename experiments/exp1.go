@@ -39,6 +39,7 @@ func NewSerial(token string, repo Repo, count int) *Serial {
 	return &Serial{
 		client: c,
 		Repo:   &repo,
+		count:  count,
 	}
 }
 
@@ -51,23 +52,28 @@ func (s *Serial) Run(ctx context.Context) (*Stats, error) {
 	}
 	for i := 0; i < s.count; i++ {
 		st.Retry[i]++
-		branchName, err := createBranch(ctx, s.client, s.Repo, fmt.Sprintf("fb-%d", i))
+		time.Sleep(5 * time.Second)
+		branch := fmt.Sprintf("fb-%d-%v", i, GenerateUuid()[:6])
+		slog.Info("Starting flow", "branch", branch)
+		branchName, err := createBranch(ctx, s.client, s.Repo, branch)
 		if err != nil {
 			return st, err
 		}
-		slog.Info("Branch created", "name", branchName)
+		time.Sleep(5 * time.Second)
+		//slog.Info("Branch created", "name", branchName)
 
-		file, err := createFile(ctx, s.client, s.Repo, branchName, i)
+		_, err = createFile(ctx, s.client, s.Repo, branchName, i)
 		if err != nil {
 			return st, err
 		}
-		slog.Info("Branch created", "name", file)
+		//slog.Info("File created", "name", file)
 
-		pr, err := createPR(ctx, s.client, s.Repo, branchName, i)
+		time.Sleep(5 * time.Second)
+		_, err = createPR(ctx, s.client, s.Repo, branchName, i)
 		if err != nil {
 			return st, err
 		}
-		slog.Info("PR created", "name", pr)
+		//slog.Info("PR created", "name", pr)
 	}
 	return st, nil
 

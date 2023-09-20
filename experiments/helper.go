@@ -2,9 +2,12 @@ package experiments
 
 import (
 	"context"
+	"encoding/base64"
 	"fmt"
 	"github.com/google/go-github/github"
+	"github.com/google/uuid"
 	"golang.org/x/oauth2"
+	"log/slog"
 )
 
 func createGHClient(ctx context.Context, token string) *github.Client {
@@ -21,8 +24,11 @@ func createBranch(ctx context.Context, client *github.Client, repo *Repo, branch
 		},
 	})
 
-	fmt.Printf("Ref= %v\n", ref)
-	fmt.Printf("Resp= %v\n", resp)
+	if err != nil {
+		return "", err
+	}
+
+	slog.Info("Branch Created", "branch", branch, "rate", resp.Rate)
 	return *ref.Ref, err
 }
 
@@ -40,8 +46,11 @@ func createFile(ctx context.Context, client *github.Client, repo *Repo, branchNa
 		Content: []byte(change),
 	})
 
-	fmt.Printf("Ref= %v\n", ref)
-	fmt.Printf("Resp= %v\n", resp)
+	if err != nil {
+		return "", err
+	}
+
+	slog.Info("File created", "iter", i, "Rate", resp.Rate)
 	return *ref.SHA, err
 }
 
@@ -54,7 +63,18 @@ func createPR(ctx context.Context, client *github.Client, repo *Repo, branchName
 		Base:  &repo.SourceBranch,
 		Head:  &branchName,
 	})
-	fmt.Printf("PR= %v\n", pr)
-	fmt.Printf("Resp= %v\n", resp)
+
+	if err != nil {
+		slog.Info("PR Failed", "iter", i, "Rate", resp.Rate)
+		return "", err
+	}
+
+	//fmt.Printf("PR= %v\n", pr)
+	slog.Info("PR created", "iter", i, "Rate", resp.Rate)
 	return pr.GetHTMLURL(), err
+}
+
+func GenerateUuid() string {
+	id := uuid.New()
+	return base64.RawURLEncoding.EncodeToString(id[:])
 }
