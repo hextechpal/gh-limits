@@ -33,7 +33,7 @@ type Serial struct {
 	count int
 }
 
-func New(token string, repo Repo, count int) *Serial {
+func NewSerial(token string, repo Repo, count int) *Serial {
 	ctx := context.Background()
 	c := createGHClient(ctx, token)
 	return &Serial{
